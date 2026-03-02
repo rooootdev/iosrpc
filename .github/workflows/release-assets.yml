@@ -1,6 +1,7 @@
 name: Build and Upload Release Assets
 
 on:
+  push:
   workflow_dispatch:
   release:
     types: [published]
