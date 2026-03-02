@@ -1,4 +1,4 @@
-#import "DiscordRPCBridge.h"
+#import "libiosrpc.h"
 #import <dlfcn.h>
 
 typedef int32_t (*dclogin_fn)(const char *);
@@ -37,7 +37,6 @@ typedef const char *(*dclast_error_fn)(void);
 
     self.handle = dlopen(bundlePath.UTF8String, RTLD_NOW | RTLD_LOCAL);
     if (self.handle == NULL) {
-        // Fallback for local simulator run scripts that copy next to executable.
         NSString *execPath = [[NSBundle mainBundle] executablePath];
         NSString *dir = [execPath stringByDeletingLastPathComponent];
         NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];

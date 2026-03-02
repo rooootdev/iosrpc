@@ -1,67 +1,48 @@
 # iOSRPC
 
-This folder contains:
+Rust-powered iOS RPC bridge with an Xcode demo app.
 
-- `rust-dylib/`: Rust `cdylib` exposing `dclogin`, `dclogout`, `startrpc`, `stoprpc`.
-- `example-xcode/`: Example iOS Xcode project (`DiscordRPCDemo.xcodeproj`) that:
-  - Uses SwiftUI (`RPCDemoApp.swift` + `ContentView.swift`).
-  - Opens Discord OAuth.
-  - Receives token through HTTPS callback page -> app scheme redirect.
-  - Passes token to `dclogin`.
-  - Calls `startrpc`/`stoprpc`/`dclogout`.
-- `web-callback-example/`: Simple PHP callback page for HTTPS -> app-scheme redirect.
-- `backend-example/`: Optional stronger-security Node/Express backend for code exchange.
+## Repository Layout
 
-## 1) Build dylib
+- `libiosrpc/`: Rust `cdylib` exposing `dclogin`, `dclogout`, `startrpc`, `stoprpc`.
+- `example/`: iOS demo app project (`iOSRPC.xcodeproj`) using SwiftUI + Objective-C bridge.
+
+## Build `libiosrpc.dylib`
 
 ```bash
-cd /Users/ruter/Desktop/understand/iOSRPC/rust-dylib
+cd libiosrpc
 ./build-ios.sh
 ```
 
 Outputs:
 
-- `target/aarch64-apple-ios/release/libiosrpc.dylib`
-- `target/aarch64-apple-ios-sim/release/libiosrpc.dylib`
-- `target/x86_64-apple-ios/release/libiosrpc.dylib`
+- `libiosrpc/target/aarch64-apple-ios/release/libiosrpc.dylib`
+- `libiosrpc/target/aarch64-apple-ios-sim/release/libiosrpc.dylib`
+- `libiosrpc/target/x86_64-apple-ios/release/libiosrpc.dylib`
 
-## 2) Open example app
+## Open the iOS Demo App
 
 Open:
 
-- `example-xcode/DiscordRPCDemo.xcodeproj`
+- `example/iOSRPC.xcodeproj`
 
-The target includes a build script phase (`Copy Rust dylib`) that copies the correct `libiosrpc.dylib` variant from `../rust-dylib/target/...` into `App.app/Frameworks/`.
+The target has a build phase (`Copy Rust dylib`) that copies the correct `libiosrpc.dylib` variant from `../libiosrpc/target/...` into `App.app/Frameworks/`.
 
-## 3) OAuth setup
+## OAuth Setup
 
-In `example-xcode/DiscordRPCDemo/Info.plist`, set:
+In `example/iOSRPC/Info.plist`, set:
 
 - `DiscordClientID` to your Discord application ID.
-- `DiscordCallbackScheme` (default sample: `iosrpc`).
+- `DiscordCallbackScheme` (default: `iosrpc`).
 - `DiscordWebCallbackURL` to your hosted HTTPS callback page.
 
-Host `web-callback-example/callback.php` at your HTTPS URL, then add that exact URL in Discord app Redirects:
+## CI Release Artifacts
 
-- `https://site.example/iosrpc/callback.php`
+GitHub Actions workflow `.github/workflows/release-assets.yml` builds and uploads these assets to the latest GitHub release:
 
-The callback page forwards query/fragment to app scheme:
-- `<DiscordCallbackScheme>://oauth?...#...`
+- `libiosrpc-aarch64-apple-ios.dylib`
+- `libiosrpc-aarch64-apple-ios-sim.dylib`
+- `libiosrpc-x86_64-apple-ios.dylib`
+- `iOSRPC-example.ipa`
 
-Optional: use `backend-example/` if you want code flow + server token exchange.
-
-## API notes
-
-`rust-dylib/src/lib.rs` currently implements stateful login/RPC lifecycle and argument validation. It stores the presence payload in-process (for integration testing) and is the correct place to plug in your actual Discord transport.
-
-Exported functions:
-
-- `int32_t dclogin(const char *token)`
-- `int32_t dclogout(void)`
-- `int32_t startrpc(const char *icon, const char *title, const char *description, const char *button)`
-- `int32_t stoprpc(void)`
-
-Optional helpers:
-
-- `const char *dclast_error(void)`
-- `const char *dcrpc_snapshot_json(void)`
+You can run it manually with `workflow_dispatch`, or it can run on release publish.

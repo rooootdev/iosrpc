@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A11B22C33D44E55F00112233"
-               BuildableName = "DiscordRPCDemo.app"
-               BlueprintName = "DiscordRPCDemo"
-               ReferencedContainer = "container:DiscordRPCDemo.xcodeproj">
+               BuildableName = "iOSRPC.app"
+               BlueprintName = "iOSRPC"
+               ReferencedContainer = "container:iOSRPC.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A11B22C33D44E55F00112233"
-            BuildableName = "DiscordRPCDemo.app"
-            BlueprintName = "DiscordRPCDemo"
-            ReferencedContainer = "container:DiscordRPCDemo.xcodeproj">
+            BuildableName = "iOSRPC.app"
+            BlueprintName = "iOSRPC"
+            ReferencedContainer = "container:iOSRPC.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -62,9 +62,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A11B22C33D44E55F00112233"
-            BuildableName = "DiscordRPCDemo.app"
-            BlueprintName = "DiscordRPCDemo"
-            ReferencedContainer = "container:DiscordRPCDemo.xcodeproj">
+            BuildableName = "iOSRPC.app"
+            BlueprintName = "iOSRPC"
+            ReferencedContainer = "container:iOSRPC.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

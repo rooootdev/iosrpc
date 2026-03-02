@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct RPCDemoApp: App {
+struct iOSRPC: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

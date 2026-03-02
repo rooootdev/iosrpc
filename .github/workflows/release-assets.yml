@@ -1,0 +1,72 @@
+name: Build and Upload Release Assets
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust dylibs
+        working-directory: libiosrpc
+        run: ./build-ios.sh
+
+      - name: Stage dylib artifacts
+        run: |
+          mkdir -p release-assets
+          cp libiosrpc/target/aarch64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-aarch64-apple-ios.dylib
+          cp libiosrpc/target/aarch64-apple-ios-sim/release/libiosrpc.dylib release-assets/libiosrpc-aarch64-apple-ios-sim.dylib
+          cp libiosrpc/target/x86_64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-x86_64-apple-ios.dylib
+
+      - name: Build iOS app (unsigned)
+        run: |
+          xcodebuild \
+            -project example/iOSRPC.xcodeproj \
+            -scheme iOSRPC \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            clean build
+
+      - name: Package IPA
+        run: |
+          APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/iOSRPC.app"
+          mkdir -p "$RUNNER_TEMP/ipa/Payload"
+          cp -R "$APP_PATH" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app"
+          (cd "$RUNNER_TEMP/ipa" && /usr/bin/zip -qry iOSRPC-example.ipa Payload)
+          cp "$RUNNER_TEMP/ipa/iOSRPC-example.ipa" release-assets/iOSRPC-example.ipa
+
+      - name: Resolve latest release tag
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq '.tagName')
+          if [ -z "$tag" ]; then
+            echo "No latest release found." >&2
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Upload assets to latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ steps.latest.outputs.tag }}" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
