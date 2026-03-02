@@ -1,0 +1,263 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A11B22C33D44E55F10112233 /* RPCDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F20112233 /* RPCDemoApp.swift */; };
+		A11B22C33D44E55F10112234 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F20112234 /* ContentView.swift */; };
+		A11B22C33D44E55F10112235 /* DiscordRPCBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F20112235 /* DiscordRPCBridge.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A11B22C33D44E55F00112233 /* DiscordRPCDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DiscordRPCDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A11B22C33D44E55F20112233 /* RPCDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RPCDemoApp.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F20112234 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F20112235 /* DiscordRPCBridge.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DiscordRPCBridge.m; sourceTree = "<group>"; };
+		A11B22C33D44E55F20112236 /* DiscordRPCBridge.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DiscordRPCBridge.h; sourceTree = "<group>"; };
+		A11B22C33D44E55F20112237 /* DiscordRPCDemo-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "DiscordRPCDemo-Bridging-Header.h"; sourceTree = "<group>"; };
+		A11B22C33D44E55F20112238 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A11B22C33D44E55F30112233 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A11B22C33D44E55F40112233 = {
+			isa = PBXGroup;
+			children = (
+				A11B22C33D44E55F40112234 /* DiscordRPCDemo */,
+				A11B22C33D44E55F40112235 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A11B22C33D44E55F40112234 /* DiscordRPCDemo */ = {
+			isa = PBXGroup;
+			children = (
+				A11B22C33D44E55F20112233 /* RPCDemoApp.swift */,
+				A11B22C33D44E55F20112234 /* ContentView.swift */,
+				A11B22C33D44E55F20112235 /* DiscordRPCBridge.m */,
+				A11B22C33D44E55F20112236 /* DiscordRPCBridge.h */,
+				A11B22C33D44E55F20112237 /* DiscordRPCDemo-Bridging-Header.h */,
+				A11B22C33D44E55F20112238 /* Info.plist */,
+			);
+			path = DiscordRPCDemo;
+			sourceTree = "<group>";
+		};
+		A11B22C33D44E55F40112235 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A11B22C33D44E55F00112233 /* DiscordRPCDemo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A11B22C33D44E55F00112234 /* DiscordRPCDemo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A11B22C33D44E55F50112234 /* Build configuration list for PBXNativeTarget "DiscordRPCDemo" */;
+			buildPhases = (
+				A11B22C33D44E55F30112234 /* Sources */,
+				A11B22C33D44E55F30112233 /* Frameworks */,
+				A11B22C33D44E55F30112235 /* Copy Rust dylib */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DiscordRPCDemo;
+			productName = DiscordRPCDemo;
+			productReference = A11B22C33D44E55F00112233 /* DiscordRPCDemo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A11B22C33D44E55F00112235 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A11B22C33D44E55F00112234 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A11B22C33D44E55F50112233 /* Build configuration list for PBXProject "DiscordRPCDemo" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A11B22C33D44E55F40112233;
+			productRefGroup = A11B22C33D44E55F40112235 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A11B22C33D44E55F00112234 /* DiscordRPCDemo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A11B22C33D44E55F30112235 /* Copy Rust dylib */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Rust dylib";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nLIB_NAME=libiosrpc.dylib\nROOT=\"${SRCROOT}/../rust-dylib/target\"\nif [ \"${PLATFORM_NAME}\" = \"iphoneos\" ]; then\n  SRC_LIB=\"${ROOT}/aarch64-apple-ios/release/${LIB_NAME}\"\nelse\n  if [ \"${NATIVE_ARCH_ACTUAL}\" = \"arm64\" ]; then\n    SRC_LIB=\"${ROOT}/aarch64-apple-ios-sim/release/${LIB_NAME}\"\n  else\n    SRC_LIB=\"${ROOT}/x86_64-apple-ios/release/${LIB_NAME}\"\n  fi\nfi\nDEST_DIR=\"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"${DEST_DIR}\"\nif [ -f \"${SRC_LIB}\" ]; then\n  cp \"${SRC_LIB}\" \"${DEST_DIR}/${LIB_NAME}\"\nelse\n  echo \"warning: ${SRC_LIB} not found. Build rust-dylib first.\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A11B22C33D44E55F30112234 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A11B22C33D44E55F10112233 /* RPCDemoApp.swift in Sources */,
+				A11B22C33D44E55F10112234 /* ContentView.swift in Sources */,
+				A11B22C33D44E55F10112235 /* DiscordRPCBridge.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A11B22C33D44E55F60112233 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A11B22C33D44E55F60112234 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		A11B22C33D44E55F60112235 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DN4S6CXFWY;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DiscordRPCDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.iosrpc;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "DiscordRPCDemo/DiscordRPCDemo-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A11B22C33D44E55F60112236 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = DN4S6CXFWY;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = DiscordRPCDemo/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.roooot.iosrpc;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "DiscordRPCDemo/DiscordRPCDemo-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A11B22C33D44E55F50112233 /* Build configuration list for PBXProject "DiscordRPCDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A11B22C33D44E55F60112233 /* Debug */,
+				A11B22C33D44E55F60112234 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A11B22C33D44E55F50112234 /* Build configuration list for PBXNativeTarget "DiscordRPCDemo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A11B22C33D44E55F60112235 /* Debug */,
+				A11B22C33D44E55F60112236 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A11B22C33D44E55F00112235 /* Project object */;
+}
