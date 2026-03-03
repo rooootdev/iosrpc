@@ -14,6 +14,8 @@ typedef const char *(*dclast_error_fn)(void);
 @property (nonatomic, assign) startrpc_fn startrpcPtr;
 @property (nonatomic, assign) stoprpc_fn stoprpcPtr;
 @property (nonatomic, assign) dclast_error_fn dclastErrorPtr;
+@property (nonatomic, copy, nullable) NSString *preferredLibraryPath;
+@property (nonatomic, copy, nullable) NSString *lastLoadError;
 @end
 
 @implementation DiscordRPCBridge
@@ -27,23 +29,43 @@ typedef const char *(*dclast_error_fn)(void);
     return instance;
 }
 
+- (void)setPreferredLibraryPath:(NSString *)path {
+    self.preferredLibraryPath = path;
+}
+
 - (BOOL)loadLibrary {
     if (self.handle != NULL) {
         return YES;
     }
 
+    NSMutableArray<NSString *> *candidatePaths = [NSMutableArray array];
+    if (self.preferredLibraryPath.length > 0) {
+        [candidatePaths addObject:self.preferredLibraryPath];
+    }
+
     NSString *frameworksPath = [[NSBundle mainBundle] privateFrameworksPath];
     NSString *bundlePath = [frameworksPath stringByAppendingPathComponent:@"libiosrpc.dylib"];
+    [candidatePaths addObject:bundlePath];
 
-    self.handle = dlopen(bundlePath.UTF8String, RTLD_NOW | RTLD_LOCAL);
-    if (self.handle == NULL) {
-        NSString *execPath = [[NSBundle mainBundle] executablePath];
-        NSString *dir = [execPath stringByDeletingLastPathComponent];
-        NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];
-        self.handle = dlopen(fallbackPath.UTF8String, RTLD_NOW | RTLD_LOCAL);
+    NSString *execPath = [[NSBundle mainBundle] executablePath];
+    NSString *dir = [execPath stringByDeletingLastPathComponent];
+    NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];
+    [candidatePaths addObject:fallbackPath];
+
+    NSString *dlError = nil;
+    for (NSString *path in candidatePaths) {
+        self.handle = dlopen(path.UTF8String, RTLD_NOW | RTLD_LOCAL);
+        if (self.handle != NULL) {
+            break;
+        }
+        const char *err = dlerror();
+        if (err != NULL) {
+            dlError = [NSString stringWithUTF8String:err];
+        }
     }
 
     if (self.handle == NULL) {
+        self.lastLoadError = dlError;
         return NO;
     }
 
@@ -78,6 +100,9 @@ typedef const char *(*dclast_error_fn)(void);
 
 - (NSString *)lastError {
     if (![self loadLibrary]) {
+        if (self.lastLoadError.length > 0) {
+            return [NSString stringWithFormat:@"Could not load libiosrpc.dylib: %@", self.lastLoadError];
+        }
         return @"Could not load libiosrpc.dylib";
     }
     if (!self.dclastErrorPtr) {

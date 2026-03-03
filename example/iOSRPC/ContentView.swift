@@ -9,8 +9,10 @@ struct ContentView: View {
     @State private var description = ""
     @State private var button = ""
     @State private var status = "Ready"
+    @State private var issecure: Bool = true
 
     @StateObject private var auth = OAuthCoordinator()
+    @EnvironmentObject private var installer: RuntimeDylibInstaller
 
     var body: some View {
         NavigationView {
@@ -27,17 +29,23 @@ struct ContentView: View {
                             }
                         }
                     }
-                    .buttonStyle(.borderedProminent)
 
-                    TextEditor(text: $token)
-                        .frame(minHeight: 90)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color.secondary.opacity(0.35), lineWidth: 1)
-                        )
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled(true)
-                        .font(.system(.footnote, design: .monospaced))
+                    HStack(spacing: 12) {
+                        Group {
+                            if issecure {
+                                SecureField("Token", text: $token)
+                            } else {
+                                TextField("Token", text: $token)
+                            }
+                        }
+                        .frame(maxWidth: 420)
+                        
+                        Button(action: { issecure.toggle() }) {
+                            Image(systemName: issecure ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
 
                     Button("Call dclogin") {
                         let code = DiscordRPCBridge.shared().login(withToken: token.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -74,7 +82,10 @@ struct ContentView: View {
 
                 Section("Status") {
                     Text(status)
-                        .font(.system(.footnote, design: .monospaced))
+                        .font(.system(size: 15, design: .monospaced))
+                        .textSelection(.enabled)
+                    Text(installer.status)
+                        .font(.system(size: 15, design: .monospaced))
                         .textSelection(.enabled)
                 }
             }

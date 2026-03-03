@@ -4,6 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface DiscordRPCBridge : NSObject
 + (instancetype)shared;
+- (void)setPreferredLibraryPath:(NSString *)path;
 - (BOOL)loadLibrary;
 - (int32_t)loginWithToken:(NSString *)token;
 - (int32_t)logout;

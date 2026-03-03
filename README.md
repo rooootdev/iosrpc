@@ -28,6 +28,8 @@ Open:
 
 The target has a build phase (`Copy Rust dylib`) that copies the correct `libiosrpc.dylib` variant from `../libiosrpc/target/...` into `App.app/Frameworks/`.
 
+On first launch, the demo app also attempts to download the latest matching `libiosrpc` release asset from GitHub and prefer that runtime copy when loading the bridge.
+
 ## OAuth Setup
 
 In `example/iOSRPC/Info.plist`, set:
