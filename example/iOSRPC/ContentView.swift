@@ -23,6 +23,7 @@ struct ContentView: View {
                             await runtimedownloader.download()
                         }
                     }
+                    .disabled(runtimedownloader.isbundled)
                     Text(runtimedownloader.status)
                         .font(.system(.footnote, design: .monospaced))
                         .textSelection(.enabled)

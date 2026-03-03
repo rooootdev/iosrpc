@@ -52,32 +52,42 @@ typedef const char *(*dclast_error_fn)(void);
         }
     }
 
-    NSMutableArray<NSString *> *candidatepaths = [NSMutableArray array];
-
-    NSString *frameworksPath = [[NSBundle mainBundle] privateFrameworksPath];
-    NSString *bundlePath = [frameworksPath stringByAppendingPathComponent:@"libiosrpc.dylib"];
-    [candidatepaths addObject:bundlePath];
-
-    NSString *execPath = [[NSBundle mainBundle] executablePath];
-    NSString *dir = [execPath stringByDeletingLastPathComponent];
-    NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];
-    [candidatepaths addObject:fallbackPath];
-
-    NSString *dlerrormsg = nil;
-    for (NSString *path in candidatepaths) {
-        self.handle = dlopen(path.UTF8String, RTLD_NOW | RTLD_LOCAL);
-        if (self.handle != NULL) {
-            break;
-        }
-        const char *err = dlerror();
-        if (err != NULL) {
-            dlerrormsg = [NSString stringWithUTF8String:err];
-        }
-    }
-
     if (self.handle == NULL) {
-        self.lastloaderror = dlerrormsg;
-        return NO;
+        NSMutableArray<NSString *> *candidatepaths = [NSMutableArray array];
+
+        NSString *bundleRoot = [NSBundle mainBundle].bundlePath;
+        if (bundleRoot.length > 0) {
+            NSString *explicitFrameworkPath = [[bundleRoot stringByAppendingPathComponent:@"Frameworks"] stringByAppendingPathComponent:@"libiosrpc.dylib"];
+            [candidatepaths addObject:explicitFrameworkPath];
+        }
+
+        NSString *frameworksPath = [[NSBundle mainBundle] privateFrameworksPath];
+        if (frameworksPath.length > 0) {
+            NSString *privateFrameworkPath = [frameworksPath stringByAppendingPathComponent:@"libiosrpc.dylib"];
+            [candidatepaths addObject:privateFrameworkPath];
+        }
+
+        NSString *execPath = [[NSBundle mainBundle] executablePath];
+        NSString *dir = [execPath stringByDeletingLastPathComponent];
+        NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];
+        [candidatepaths addObject:fallbackPath];
+
+        NSString *dlerrormsg = nil;
+        for (NSString *path in candidatepaths) {
+            self.handle = dlopen(path.UTF8String, RTLD_NOW | RTLD_LOCAL);
+            if (self.handle != NULL) {
+                break;
+            }
+            const char *err = dlerror();
+            if (err != NULL) {
+                dlerrormsg = [NSString stringWithUTF8String:err];
+            }
+        }
+
+        if (self.handle == NULL) {
+            self.lastloaderror = dlerrormsg;
+            return NO;
+        }
     }
 
     self.dcloginPtr = (dclogin_fn)dlsym(self.handle, "dclogin");

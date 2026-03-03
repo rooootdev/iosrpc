@@ -28,6 +28,8 @@ The target has a build phase (`Copy Rust dylib`) that copies the correct `libios
 
 The demo app has a `download runtime dylib` button that downloads `libiosrpc.dylib` from the latest GitHub release and prefers that runtime copy when loading the bridge.
 
+For physical iOS devices, this relies on JIT-enabled/TrollStore-style installs with permissive entitlements. A normal App Store-style signature will still block loading downloaded unsigned/untrusted dylibs.
+
 ## OAuth Setup
 
 In `example/iOSRPC/Info.plist`, set:

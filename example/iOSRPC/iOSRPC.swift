@@ -3,12 +3,30 @@ import SwiftUI
 @MainActor
 final class runtimedylibdownloader: ObservableObject {
     @Published private(set) var status = "runtime dylib: idle"
+    @Published private(set) var isbundled = false
 
     private let repoowner = "rooootdev"
     private let reponame = "iosrpc"
     private let assetname = "libiosrpc.dylib"
+    
+    init() {
+        if let path = bundledlibrarypath() {
+            isbundled = true
+            DiscordRPCBridge.shared().setpreferredlibrarypath(path)
+        } else {
+            isbundled = false
+        }
+        if isbundled {
+            status = "runtime dylib: bundled in app"
+        }
+    }
 
     func download() async {
+        if isbundled {
+            status = "runtime dylib: bundled in app"
+            return
+        }
+
         do {
             status = "runtime dylib: downloading"
             let asseturl = try await fetchasseturl()
@@ -52,6 +70,22 @@ final class runtimedylibdownloader: ObservableObject {
             create: true
         )
         return baseurl.appendingPathComponent(assetname)
+    }
+    
+    private func bundledlibrarypath() -> String? {
+        if let frameworkspath = Bundle.main.privateFrameworksPath {
+            let path = (frameworkspath as NSString).appendingPathComponent(assetname)
+            if FileManager.default.fileExists(atPath: path) {
+                return path
+            }
+        }
+        if let execpath = Bundle.main.executablePath {
+            let path = ((execpath as NSString).deletingLastPathComponent as NSString).appendingPathComponent(assetname)
+            if FileManager.default.fileExists(atPath: path) {
+                return path
+            }
+        }
+        return nil
     }
 
     private func fetchasseturl() async throws -> URL {

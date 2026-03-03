@@ -17,6 +17,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install ldid
+        run: |
+          brew update
+          brew install ldid || true
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -30,6 +35,18 @@ jobs:
           cp libiosrpc/target/aarch64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc.dylib
           cp libiosrpc/target/aarch64-apple-ios-sim/release/libiosrpc.dylib release-assets/libiosrpc-sim.dylib
           cp libiosrpc/target/x86_64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-x86_64.dylib
+
+      - name: Sign dylib artifacts
+        run: |
+          if command -v ldid >/dev/null 2>&1; then
+            ldid -S release-assets/libiosrpc.dylib
+            ldid -S release-assets/libiosrpc-sim.dylib
+            ldid -S release-assets/libiosrpc-x86_64.dylib
+          else
+            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc.dylib
+            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc-sim.dylib
+            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc-x86_64.dylib
+          fi
 
       - name: Build iOS app (unsigned)
         run: |
@@ -49,6 +66,20 @@ jobs:
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/iOSRPC.app"
           mkdir -p "$RUNNER_TEMP/ipa/Payload"
           cp -R "$APP_PATH" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app"
+          rm -rf "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/_CodeSignature" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/embedded.mobileprovision" || true
+
+          if [ -f "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib" ]; then
+            if command -v ldid >/dev/null 2>&1; then
+              ldid -S "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib"
+            else
+              /usr/bin/codesign --force --sign - --timestamp=none "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib"
+            fi
+          fi
+
+          if command -v ldid >/dev/null 2>&1; then
+            ldid -S"$GITHUB_WORKSPACE/example/Config/iOSRPC.trollstore.entitlements" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/iOSRPC"
+          fi
+
           (cd "$RUNNER_TEMP/ipa" && /usr/bin/zip -qry iOSRPC.ipa Payload)
           cp "$RUNNER_TEMP/ipa/iOSRPC.ipa" release-assets/iOSRPC.ipa
 
