@@ -1,126 +1,102 @@
 import SwiftUI
 
 @MainActor
-final class RuntimeDylibInstaller: ObservableObject {
-    @Published private(set) var status = "Runtime dylib: pending"
+final class runtimedylibdownloader: ObservableObject {
+    @Published private(set) var status = "runtime dylib: idle"
 
-    private let repoOwner = "rooootdev"
-    private let repoName = "iosrpc"
-    private let runtimeLibraryFileName = "libiosrpc-runtime.dylib"
+    private let repoowner = "rooootdev"
+    private let reponame = "iosrpc"
+    private let assetname = "libiosrpc.dylib"
 
-    func ensureInstalledOnFirstLaunch() async {
+    func download() async {
         do {
-            let destinationURL = try runtimeLibraryURL()
-            if FileManager.default.fileExists(atPath: destinationURL.path) {
-                DiscordRPCBridge.shared().setPreferredLibraryPath(destinationURL.path)
-                status = "Runtime dylib: installed"
-                return
-            }
-
-            status = "Runtime dylib: downloading"
-            let assetURL = try await fetchLatestAssetURL()
-            let (data, response) = try await URLSession.shared.data(from: assetURL)
+            status = "runtime dylib: downloading"
+            let asseturl = try await fetchasseturl()
+            let (data, response) = try await URLSession.shared.data(from: asseturl)
             guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-                throw NSError(domain: "RuntimeDylib", code: -23, userInfo: [NSLocalizedDescriptionKey: "Asset download failed"])
+                throw NSError(domain: "runtimedylib", code: -23, userInfo: [NSLocalizedDescriptionKey: "asset download failed"])
             }
 
-            let dirURL = destinationURL.deletingLastPathComponent()
-            try FileManager.default.createDirectory(at: dirURL, withIntermediateDirectories: true)
+            let targeturl = try targeturlforlibrary()
+            let dirurl = targeturl.deletingLastPathComponent()
+            try FileManager.default.createDirectory(at: dirurl, withIntermediateDirectories: true)
 
-            let tempURL = dirURL.appendingPathComponent(UUID().uuidString + ".tmp")
-            try data.write(to: tempURL, options: .atomic)
-            if FileManager.default.fileExists(atPath: destinationURL.path) {
-                try FileManager.default.removeItem(at: destinationURL)
+            let tempurl = dirurl.appendingPathComponent(UUID().uuidString + ".tmp")
+            try data.write(to: tempurl, options: .atomic)
+            if FileManager.default.fileExists(atPath: targeturl.path) {
+                try FileManager.default.removeItem(at: targeturl)
             }
-            try FileManager.default.moveItem(at: tempURL, to: destinationURL)
+            try FileManager.default.moveItem(at: tempurl, to: targeturl)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targeturl.path)
 
-            DiscordRPCBridge.shared().setPreferredLibraryPath(destinationURL.path)
-            status = "Runtime dylib: installed"
+            DiscordRPCBridge.shared().setpreferredlibrarypath(targeturl.path)
+            guard DiscordRPCBridge.shared().loadlibrary() else {
+                throw NSError(
+                    domain: "runtimedylib",
+                    code: -25,
+                    userInfo: [NSLocalizedDescriptionKey: "downloaded but failed to load: \(DiscordRPCBridge.shared().lasterror())"]
+                )
+            }
+
+            status = "runtime dylib: ready"
         } catch {
-            status = "Runtime dylib: \(error.localizedDescription)"
+            status = "runtime dylib: \(error.localizedDescription)"
         }
     }
 
-    private func runtimeLibraryURL() throws -> URL {
-        let base = try FileManager.default.url(
+    private func targeturlforlibrary() throws -> URL {
+        let baseurl = try FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
             create: true
         )
-        return base.appendingPathComponent(runtimeLibraryFileName)
+        return baseurl.appendingPathComponent(assetname)
     }
 
-    private func fetchLatestAssetURL() async throws -> URL {
-        let releaseURL = URL(string: "https://api.github.com/repos/\(repoOwner)/\(repoName)/releases/latest")!
-        var request = URLRequest(url: releaseURL)
+    private func fetchasseturl() async throws -> URL {
+        let releaseurl = URL(string: "https://api.github.com/repos/\(repoowner)/\(reponame)/releases/latest")!
+        var request = URLRequest(url: releaseurl)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("iOSRPC-Demo", forHTTPHeaderField: "User-Agent")
+        request.setValue("iosrpc-demo", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else {
-            throw NSError(domain: "RuntimeDylib", code: -21, userInfo: [NSLocalizedDescriptionKey: "Invalid response when fetching release metadata"])
+            throw NSError(domain: "runtimedylib", code: -21, userInfo: [NSLocalizedDescriptionKey: "invalid metadata response"])
         }
         guard http.statusCode == 200 else {
             if http.statusCode == 404 {
-                throw NSError(
-                    domain: "RuntimeDylib",
-                    code: -21,
-                    userInfo: [NSLocalizedDescriptionKey: "No published GitHub release found. Create a release first."]
-                )
+                throw NSError(domain: "runtimedylib", code: -21, userInfo: [NSLocalizedDescriptionKey: "no published release found"])
             }
             let body = String(data: data, encoding: .utf8) ?? ""
-            let snippet = body.prefix(140)
-            throw NSError(
-                domain: "RuntimeDylib",
-                code: -21,
-                userInfo: [NSLocalizedDescriptionKey: "GitHub release metadata request failed (\(http.statusCode)): \(snippet)"]
-            )
+            throw NSError(domain: "runtimedylib", code: -21, userInfo: [NSLocalizedDescriptionKey: "metadata request failed (\(http.statusCode)): \(body.prefix(120))"])
         }
 
-        let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-        guard let asset = release.assets.first(where: { $0.name == expectedAssetName }) else {
-            throw NSError(domain: "RuntimeDylib", code: -22, userInfo: [NSLocalizedDescriptionKey: "Expected asset not found in latest release"])
+        let release = try JSONDecoder().decode(githubrelease.self, from: data)
+        guard let asset = release.assets.first(where: { $0.name == assetname }) else {
+            throw NSError(domain: "runtimedylib", code: -22, userInfo: [NSLocalizedDescriptionKey: "\(assetname) not found in latest release"])
         }
         guard let url = URL(string: asset.browser_download_url) else {
-            throw NSError(domain: "RuntimeDylib", code: -24, userInfo: [NSLocalizedDescriptionKey: "Invalid download URL in release asset"])
+            throw NSError(domain: "runtimedylib", code: -24, userInfo: [NSLocalizedDescriptionKey: "invalid download url"])
         }
         return url
     }
-
-    private var expectedAssetName: String {
-#if targetEnvironment(simulator)
-        #if arch(arm64)
-        return "libiosrpc-aarch64-apple-ios-sim.dylib"
-        #else
-        return "libiosrpc-x86_64-apple-ios.dylib"
-        #endif
-#else
-        return "libiosrpc-aarch64-apple-ios.dylib"
-#endif
-    }
 }
 
-private struct GitHubRelease: Decodable {
-    let assets: [GitHubReleaseAsset]
+private struct githubrelease: Decodable {
+    let assets: [githubreleaseasset]
 }
 
-private struct GitHubReleaseAsset: Decodable {
+private struct githubreleaseasset: Decodable {
     let name: String
     let browser_download_url: String
 }
 
 @main
 struct iOSRPC: App {
-    @StateObject private var installer = RuntimeDylibInstaller()
-
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(installer)
-                .task {
-                    await installer.ensureInstalledOnFirstLaunch()
-                }
         }
     }
 }

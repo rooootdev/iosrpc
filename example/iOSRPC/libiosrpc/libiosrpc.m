@@ -13,9 +13,9 @@ typedef const char *(*dclast_error_fn)(void);
 @property (nonatomic, assign) dclogout_fn dclogoutPtr;
 @property (nonatomic, assign) startrpc_fn startrpcPtr;
 @property (nonatomic, assign) stoprpc_fn stoprpcPtr;
-@property (nonatomic, assign) dclast_error_fn dclastErrorPtr;
-@property (nonatomic, copy, nullable) NSString *preferredLibraryPath;
-@property (nonatomic, copy, nullable) NSString *lastLoadError;
+@property (nonatomic, assign) dclast_error_fn dclasterrorptr;
+@property (nonatomic, copy, nullable) NSString *preferredlibrarypath;
+@property (nonatomic, copy, nullable) NSString *lastloaderror;
 @end
 
 @implementation DiscordRPCBridge
@@ -29,43 +29,54 @@ typedef const char *(*dclast_error_fn)(void);
     return instance;
 }
 
-- (void)setPreferredLibraryPath:(NSString *)path {
-    self.preferredLibraryPath = path;
+- (void)setpreferredlibrarypath:(NSString *)path {
+    self.preferredlibrarypath = path;
 }
 
-- (BOOL)loadLibrary {
+- (BOOL)loadlibrary {
     if (self.handle != NULL) {
         return YES;
     }
 
-    NSMutableArray<NSString *> *candidatePaths = [NSMutableArray array];
-    if (self.preferredLibraryPath.length > 0) {
-        [candidatePaths addObject:self.preferredLibraryPath];
+    if (self.preferredlibrarypath.length > 0) {
+        if (![[NSFileManager defaultManager] fileExistsAtPath:self.preferredlibrarypath]) {
+            self.lastloaderror = [NSString stringWithFormat:@"preferred library not found at path: %@", self.preferredlibrarypath];
+            return NO;
+        }
+
+        self.handle = dlopen(self.preferredlibrarypath.UTF8String, RTLD_NOW | RTLD_LOCAL);
+        if (self.handle == NULL) {
+            const char *err = dlerror();
+            self.lastloaderror = err ? [NSString stringWithUTF8String:err] : @"dlopen failed for preferred library path";
+            return NO;
+        }
     }
+
+    NSMutableArray<NSString *> *candidatepaths = [NSMutableArray array];
 
     NSString *frameworksPath = [[NSBundle mainBundle] privateFrameworksPath];
     NSString *bundlePath = [frameworksPath stringByAppendingPathComponent:@"libiosrpc.dylib"];
-    [candidatePaths addObject:bundlePath];
+    [candidatepaths addObject:bundlePath];
 
     NSString *execPath = [[NSBundle mainBundle] executablePath];
     NSString *dir = [execPath stringByDeletingLastPathComponent];
     NSString *fallbackPath = [dir stringByAppendingPathComponent:@"libiosrpc.dylib"];
-    [candidatePaths addObject:fallbackPath];
+    [candidatepaths addObject:fallbackPath];
 
-    NSString *dlError = nil;
-    for (NSString *path in candidatePaths) {
+    NSString *dlerrormsg = nil;
+    for (NSString *path in candidatepaths) {
         self.handle = dlopen(path.UTF8String, RTLD_NOW | RTLD_LOCAL);
         if (self.handle != NULL) {
             break;
         }
         const char *err = dlerror();
         if (err != NULL) {
-            dlError = [NSString stringWithUTF8String:err];
+            dlerrormsg = [NSString stringWithUTF8String:err];
         }
     }
 
     if (self.handle == NULL) {
-        self.lastLoadError = dlError;
+        self.lastloaderror = dlerrormsg;
         return NO;
     }
 
@@ -73,43 +84,43 @@ typedef const char *(*dclast_error_fn)(void);
     self.dclogoutPtr = (dclogout_fn)dlsym(self.handle, "dclogout");
     self.startrpcPtr = (startrpc_fn)dlsym(self.handle, "startrpc");
     self.stoprpcPtr = (stoprpc_fn)dlsym(self.handle, "stoprpc");
-    self.dclastErrorPtr = (dclast_error_fn)dlsym(self.handle, "dclast_error");
+    self.dclasterrorptr = (dclast_error_fn)dlsym(self.handle, "dclast_error");
 
     return self.dcloginPtr && self.dclogoutPtr && self.startrpcPtr && self.stoprpcPtr;
 }
 
-- (int32_t)loginWithToken:(NSString *)token {
-    if (![self loadLibrary]) return -999;
+- (int32_t)loginwithtoken:(NSString *)token {
+    if (![self loadlibrary]) return -999;
     return self.dcloginPtr(token.UTF8String);
 }
 
 - (int32_t)logout {
-    if (![self loadLibrary]) return -999;
+    if (![self loadlibrary]) return -999;
     return self.dclogoutPtr();
 }
 
-- (int32_t)startRPCWithIcon:(NSString *)icon title:(NSString *)title description:(NSString *)description button:(NSString *)button {
-    if (![self loadLibrary]) return -999;
+- (int32_t)startrpcwithicon:(NSString *)icon title:(NSString *)title description:(NSString *)description button:(NSString *)button {
+    if (![self loadlibrary]) return -999;
     return self.startrpcPtr(icon.UTF8String, title.UTF8String, description.UTF8String, button.UTF8String);
 }
 
-- (int32_t)stopRPC {
-    if (![self loadLibrary]) return -999;
+- (int32_t)stoprpc {
+    if (![self loadlibrary]) return -999;
     return self.stoprpcPtr();
 }
 
-- (NSString *)lastError {
-    if (![self loadLibrary]) {
-        if (self.lastLoadError.length > 0) {
-            return [NSString stringWithFormat:@"Could not load libiosrpc.dylib: %@", self.lastLoadError];
+- (NSString *)lasterror {
+    if (![self loadlibrary]) {
+        if (self.lastloaderror.length > 0) {
+            return [NSString stringWithFormat:@"Could not load libiosrpc.dylib: %@", self.lastloaderror];
         }
         return @"Could not load libiosrpc.dylib";
     }
-    if (!self.dclastErrorPtr) {
+    if (!self.dclasterrorptr) {
         return @"dclast_error not exported";
     }
 
-    const char *value = self.dclastErrorPtr();
+    const char *value = self.dclasterrorptr();
     if (!value) {
         return @"unknown";
     }

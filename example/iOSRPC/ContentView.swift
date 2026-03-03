@@ -8,24 +8,35 @@ struct ContentView: View {
     @State private var title = ""
     @State private var description = ""
     @State private var button = ""
-    @State private var status = "Ready"
-    @State private var issecure: Bool = true
+    @State private var status = "ready"
+    @State private var issecure = true
 
-    @StateObject private var auth = OAuthCoordinator()
-    @EnvironmentObject private var installer: RuntimeDylibInstaller
+    @StateObject private var oauth = oauthcoordinator()
+    @StateObject private var runtimedownloader = runtimedylibdownloader()
 
     var body: some View {
         NavigationView {
             Form {
-                Section("Authorization") {
-                    Button("Authorize (OAuth Sheet)") {
-                        auth.start { result in
+                Section("runtime") {
+                    Button("download runtime dylib") {
+                        Task {
+                            await runtimedownloader.download()
+                        }
+                    }
+                    Text(runtimedownloader.status)
+                        .font(.system(.footnote, design: .monospaced))
+                        .textSelection(.enabled)
+                }
+
+                Section("authorization") {
+                    Button("authorize (oauth sheet)") {
+                        oauth.start { result in
                             switch result {
-                            case .success(let accessToken):
-                                token = accessToken
-                                status = "OAuth success. Token captured."
+                            case .success(let accesstoken):
+                                token = accesstoken
+                                status = "oauth success. token captured."
                             case .failure(let error):
-                                status = "OAuth canceled/failed: \(error.localizedDescription)"
+                                status = "oauth canceled/failed: \(error.localizedDescription)"
                             }
                         }
                     }
@@ -33,13 +44,13 @@ struct ContentView: View {
                     HStack(spacing: 12) {
                         Group {
                             if issecure {
-                                SecureField("Token", text: $token)
+                                SecureField("token", text: $token)
                             } else {
-                                TextField("Token", text: $token)
+                                TextField("token", text: $token)
                             }
                         }
                         .frame(maxWidth: 420)
-                        
+
                         Button(action: { issecure.toggle() }) {
                             Image(systemName: issecure ? "eye.slash" : "eye")
                                 .foregroundColor(.secondary)
@@ -47,131 +58,129 @@ struct ContentView: View {
                         .buttonStyle(PlainButtonStyle())
                     }
 
-                    Button("Call dclogin") {
-                        let code = DiscordRPCBridge.shared().login(withToken: token.trimmingCharacters(in: .whitespacesAndNewlines))
-                        status = "dclogin -> \(code) | \(DiscordRPCBridge.shared().lastError())"
+                    Button("call dclogin") {
+                        let code = DiscordRPCBridge.shared().loginwithtoken(token.trimmingCharacters(in: .whitespacesAndNewlines))
+                        status = "dclogin -> \(code) | \(DiscordRPCBridge.shared().lasterror())"
                     }
                 }
 
-                Section("Presence") {
+                Section("presence") {
                     TextField("icon", text: $icon)
                     TextField("title", text: $title)
                     TextField("description", text: $description)
                     TextField("button", text: $button)
 
-                    Button("Call startrpc") {
-                        let code = DiscordRPCBridge.shared().startRPC(
-                            withIcon: icon,
+                    Button("call startrpc") {
+                        let code = DiscordRPCBridge.shared().startrpcwithicon(
+                            icon,
                             title: title,
                             description: description,
                             button: button
                         )
-                        status = "startrpc -> \(code) | \(DiscordRPCBridge.shared().lastError())"
+                        status = "startrpc -> \(code) | \(DiscordRPCBridge.shared().lasterror())"
                     }
 
-                    Button("Call stoprpc") {
-                        let code = DiscordRPCBridge.shared().stopRPC()
-                        status = "stoprpc -> \(code) | \(DiscordRPCBridge.shared().lastError())"
+                    Button("call stoprpc") {
+                        let code = DiscordRPCBridge.shared().stoprpc()
+                        status = "stoprpc -> \(code) | \(DiscordRPCBridge.shared().lasterror())"
                     }
 
-                    Button("Call dclogout") {
+                    Button("call dclogout") {
                         let code = DiscordRPCBridge.shared().logout()
-                        status = "dclogout -> \(code) | \(DiscordRPCBridge.shared().lastError())"
+                        status = "dclogout -> \(code) | \(DiscordRPCBridge.shared().lasterror())"
                     }
                 }
 
-                Section("Status") {
+                Section("status") {
                     Text(status)
-                        .font(.system(size: 15, design: .monospaced))
-                        .textSelection(.enabled)
-                    Text(installer.status)
-                        .font(.system(size: 15, design: .monospaced))
+                        .font(.system(.footnote, design: .monospaced))
                         .textSelection(.enabled)
                 }
             }
-            .navigationTitle("iOS RPC Demo")
+            .navigationTitle("ios rpc demo")
         }
     }
 }
 
-final class OAuthCoordinator: NSObject, ObservableObject, ASWebAuthenticationPresentationContextProviding {
-    private var authSession: ASWebAuthenticationSession?
+final class oauthcoordinator: NSObject, ObservableObject, ASWebAuthenticationPresentationContextProviding {
+    private var authsession: ASWebAuthenticationSession?
 
-    private let clientID: String
-    private let callbackScheme: String
-    private let webCallbackURL: URL?
-    private var pendingState: String?
+    private let clientid: String
+    private let callbackscheme: String
+    private let webcallbackurl: URL?
+    private var pendingstate: String?
 
     override init() {
         let info = Bundle.main.infoDictionary ?? [:]
-        let rawClientID = (info["DiscordClientID"] as? String)?
+        let rawclientid = (info["DiscordClientID"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let plistCallbackScheme = (info["DiscordCallbackScheme"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let rawWebCallbackURL = (info["DiscordWebCallbackURL"] as? String)?
+        let plistcallbackscheme = (info["DiscordCallbackScheme"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let rawwebcallbackurl = (info["DiscordWebCallbackURL"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
-        self.clientID = rawClientID
-        self.callbackScheme = plistCallbackScheme.isEmpty ? "iosrpc" : plistCallbackScheme
-        self.webCallbackURL = URL(string: rawWebCallbackURL)
+        clientid = rawclientid
+        callbackscheme = plistcallbackscheme.isEmpty ? "iosrpc" : plistcallbackscheme
+        webcallbackurl = URL(string: rawwebcallbackurl)
         super.init()
     }
 
     func start(completion: @escaping (Result<String, Error>) -> Void) {
-        guard !clientID.isEmpty, clientID.allSatisfy(\.isNumber) else {
+        guard !clientid.isEmpty, clientid.allSatisfy(\.isNumber) else {
             completion(.failure(NSError(
-                domain: "OAuth",
+                domain: "oauth",
                 code: -10,
-                userInfo: [NSLocalizedDescriptionKey: "Invalid DiscordClientID in Info.plist."]
+                userInfo: [NSLocalizedDescriptionKey: "invalid DiscordClientID in Info.plist."]
             )))
             return
         }
 
-        guard let webCallbackURL, webCallbackURL.scheme == "https" else {
-            completion(.failure(NSError(domain: "OAuth", code: -1, userInfo: [NSLocalizedDescriptionKey: "Bad OAuth URL"])))
+        guard let webcallbackurl, webcallbackurl.scheme == "https" else {
+            completion(.failure(NSError(domain: "oauth", code: -1, userInfo: [NSLocalizedDescriptionKey: "bad oauth url"])))
             return
         }
 
         let state = UUID().uuidString
-        pendingState = state
+        pendingstate = state
 
         var components = URLComponents(string: "https://discord.com/oauth2/authorize")
         components?.queryItems = [
-            URLQueryItem(name: "client_id", value: clientID),
+            URLQueryItem(name: "client_id", value: clientid),
             URLQueryItem(name: "response_type", value: "token"),
-            URLQueryItem(name: "redirect_uri", value: webCallbackURL.absoluteString),
+            URLQueryItem(name: "redirect_uri", value: webcallbackurl.absoluteString),
             URLQueryItem(name: "scope", value: "identify"),
             URLQueryItem(name: "state", value: state),
             URLQueryItem(name: "prompt", value: "consent")
         ]
 
         guard let url = components?.url else {
-            completion(.failure(NSError(domain: "OAuth", code: -11, userInfo: [NSLocalizedDescriptionKey: "Could not build Discord authorize URL."])))
+            completion(.failure(NSError(domain: "oauth", code: -11, userInfo: [NSLocalizedDescriptionKey: "could not build discord authorize url."])))
             return
         }
 
-        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackScheme) { callbackURL, error in
+        let session = ASWebAuthenticationSession(url: url, callbackURLScheme: callbackscheme) { callbackurl, error in
             if let error {
                 completion(.failure(error))
                 return
             }
-            guard let callbackURL else {
-                completion(.failure(NSError(domain: "OAuth", code: -2, userInfo: [NSLocalizedDescriptionKey: "No callback URL"])))
+            guard let callbackurl else {
+                completion(.failure(NSError(domain: "oauth", code: -2, userInfo: [NSLocalizedDescriptionKey: "no callback url"])))
                 return
             }
 
-            let values = Self.queryMap(from: callbackURL)
-            if let oauthError = values["error"] {
-                completion(.failure(NSError(domain: "OAuth", code: -4, userInfo: [NSLocalizedDescriptionKey: oauthError])))
+            let values = Self.querymap(from: callbackurl)
+            if let oautherror = values["error"] {
+                completion(.failure(NSError(domain: "oauth", code: -4, userInfo: [NSLocalizedDescriptionKey: oautherror])))
                 return
             }
 
-            guard let state = values["state"], state == self.pendingState else {
-                completion(.failure(NSError(domain: "OAuth", code: -5, userInfo: [NSLocalizedDescriptionKey: "OAuth state mismatch."])))
+            guard let state = values["state"], state == self.pendingstate else {
+                completion(.failure(NSError(domain: "oauth", code: -5, userInfo: [NSLocalizedDescriptionKey: "oauth state mismatch."])))
                 return
             }
 
             guard let token = values["access_token"], !token.isEmpty else {
-                completion(.failure(NSError(domain: "OAuth", code: -3, userInfo: [NSLocalizedDescriptionKey: "No access_token in callback."])))
+                completion(.failure(NSError(domain: "oauth", code: -3, userInfo: [NSLocalizedDescriptionKey: "no access_token in callback."])))
                 return
             }
 
@@ -180,7 +189,7 @@ final class OAuthCoordinator: NSObject, ObservableObject, ASWebAuthenticationPre
 
         session.presentationContextProvider = self
         session.prefersEphemeralWebBrowserSession = true
-        authSession = session
+        authsession = session
         _ = session.start()
     }
 
@@ -194,9 +203,9 @@ final class OAuthCoordinator: NSObject, ObservableObject, ASWebAuthenticationPre
         return window
     }
 
-    private static func queryMap(from callbackURL: URL) -> [String: String] {
+    private static func querymap(from callbackurl: URL) -> [String: String] {
         var map: [String: String] = [:]
-        if let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false) {
+        if let components = URLComponents(url: callbackurl, resolvingAgainstBaseURL: false) {
             for item in components.queryItems ?? [] {
                 if let value = item.value {
                     map[item.name] = value
@@ -204,7 +213,7 @@ final class OAuthCoordinator: NSObject, ObservableObject, ASWebAuthenticationPre
             }
         }
 
-        if let fragment = callbackURL.fragment {
+        if let fragment = callbackurl.fragment {
             for piece in fragment.split(separator: "&") {
                 let parts = piece.split(separator: "=", maxSplits: 1)
                 if parts.count == 2 {
