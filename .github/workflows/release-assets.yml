@@ -38,15 +38,8 @@ jobs:
 
       - name: Sign dylib artifacts
         run: |
-          if command -v ldid >/dev/null 2>&1; then
-            ldid -S release-assets/libiosrpc.dylib
-            ldid -S release-assets/libiosrpc-sim.dylib
-            ldid -S release-assets/libiosrpc-x86_64.dylib
-          else
-            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc.dylib
-            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc-sim.dylib
-            /usr/bin/codesign --force --sign - --timestamp=none release-assets/libiosrpc-x86_64.dylib
-          fi
+          # Keep downloadable dylibs unsigned here; final installer/resigning flow should sign app-bundled binaries.
+          true
 
       - name: Build iOS app (unsigned)
         run: |
@@ -68,13 +61,7 @@ jobs:
           cp -R "$APP_PATH" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app"
           rm -rf "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/_CodeSignature" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/embedded.mobileprovision" || true
 
-          if [ -f "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib" ]; then
-            if command -v ldid >/dev/null 2>&1; then
-              ldid -S "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib"
-            else
-              /usr/bin/codesign --force --sign - --timestamp=none "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/Frameworks/libiosrpc.dylib"
-            fi
-          fi
+          # Do not pre-sign embedded dylib here; let the final installer/signing tool sign nested binaries consistently.
 
           if command -v ldid >/dev/null 2>&1; then
             ldid -S"$GITHUB_WORKSPACE/example/Config/iOSRPC.trollstore.entitlements" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app/iOSRPC"
