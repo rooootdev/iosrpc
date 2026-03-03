@@ -1,9 +1,7 @@
 # iOSRPC
-
-Rust-powered iOS RPC bridge with an Xcode demo app.
+Rust-powered iOS RPC bridge.
 
 ## Repository Layout
-
 - `libiosrpc/`: Rust `cdylib` exposing `dclogin`, `dclogout`, `startrpc`, `stoprpc`.
 - `example/`: iOS demo app project (`iOSRPC.xcodeproj`) using SwiftUI + Objective-C bridge.
 
