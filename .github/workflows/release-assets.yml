@@ -27,9 +27,9 @@ jobs:
       - name: Stage dylib artifacts
         run: |
           mkdir -p release-assets
-          cp libiosrpc/target/aarch64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-aarch64-apple-ios.dylib
-          cp libiosrpc/target/aarch64-apple-ios-sim/release/libiosrpc.dylib release-assets/libiosrpc-aarch64-apple-ios-sim.dylib
-          cp libiosrpc/target/x86_64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-x86_64-apple-ios.dylib
+          cp libiosrpc/target/aarch64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc.dylib
+          cp libiosrpc/target/aarch64-apple-ios-sim/release/libiosrpc.dylib release-assets/libiosrpc-sim.dylib
+          cp libiosrpc/target/x86_64-apple-ios/release/libiosrpc.dylib release-assets/libiosrpc-x86_64.dylib
 
       - name: Build iOS app (unsigned)
         run: |
@@ -49,8 +49,8 @@ jobs:
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/iOSRPC.app"
           mkdir -p "$RUNNER_TEMP/ipa/Payload"
           cp -R "$APP_PATH" "$RUNNER_TEMP/ipa/Payload/iOSRPC.app"
-          (cd "$RUNNER_TEMP/ipa" && /usr/bin/zip -qry iOSRPC-example.ipa Payload)
-          cp "$RUNNER_TEMP/ipa/iOSRPC-example.ipa" release-assets/iOSRPC-example.ipa
+          (cd "$RUNNER_TEMP/ipa" && /usr/bin/zip -qry iOSRPC.ipa Payload)
+          cp "$RUNNER_TEMP/ipa/iOSRPC.ipa" release-assets/iOSRPC.ipa
 
       - name: Resolve latest release tag
         id: latest
